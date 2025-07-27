@@ -10,6 +10,8 @@ export LANG=C.UTF-8
 CLUSTER_NAME="k8s-scaling-cluster"
 NODE_IP="70.167.32.130"
 SSH_PORT="31375"
+SSH_USER="root"
+SSH_KEY_PATH="~/.ssh/prime_intellect_k8s"
 
 # Function definitions
 log() {
@@ -20,20 +22,30 @@ warn() {
     echo "[WARN] $1"
 }
 
+error() {
+    echo "[ERROR] $1"
+    exit 1
+}
+
 cd kubespray
 
-# Test Ansible connectivity
-log "Testing Ansible connectivity..."
-ansible all -i inventory/${CLUSTER_NAME}/inventory.ini -m ping \
-    --ssh-extra-args="-p ${SSH_PORT}"
+# Final connectivity test
+log "Testing final connectivity before deployment..."
+if ! ansible all -i inventory/${CLUSTER_NAME}/hosts.yaml -m ping --ssh-extra-args="-o StrictHostKeyChecking=no"; then
+    error "Ansible connectivity test failed. Cannot proceed with deployment."
+fi
 
-# Run the Kubespray playbook
+# Deploy the cluster
 log "Starting Kubernetes cluster deployment..."
-log "This may take 15-30 minutes..."
+log "This may take 20-30 minutes..."
 
-ansible-playbook -i inventory/${CLUSTER_NAME}/inventory.ini \
-    --become --become-user=root \
-    cluster.yml
+export ANSIBLE_HOST_KEY_CHECKING=False
+ansible-playbook -i inventory/${CLUSTER_NAME}/hosts.yaml cluster.yml --become --become-user=root -v
 
-# Monitor deployment progress
-tail -f /var/log/ansible.log  # if logging is enabled
+if [ $? -eq 0 ]; then
+    log "Kubernetes cluster deployment completed successfully!"
+else
+    error "Kubernetes cluster deployment failed!"
+fi
+
+log "Deployment script completed!"

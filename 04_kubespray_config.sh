@@ -1,21 +1,9 @@
-#!/bin/bash
-
-set -e  # Exit on any error
-
-# Configuration variables
-CLUSTER_NAME="k8s-scaling-cluster"
-NODE_IP="70.167.32.130"
-
-# Function definitions
-log() {
-    echo "[INFO] $1"
-}
-
-warn() {
-    echo "[WARN] $1"
-}
-
 cd kubespray
+
+# Create necessary directories
+log "Creating configuration directories..."
+mkdir -p inventory/${CLUSTER_NAME}/group_vars/k8s_cluster
+mkdir -p inventory/${CLUSTER_NAME}/group_vars/all
 
 # Configure cluster settings (optional customizations)
 log "Configuring cluster settings..."
@@ -64,11 +52,9 @@ local_volume_provisioner_enabled: true
 metrics_server_enabled: true
 enable_network_policy: true
 
-# GPU support
-nvidia_gpu_nodes:
-  - worker1
-  - worker2
-  - worker3
+# Single node configuration
+kube_control_plane_port: 6443
+supplementary_addresses_in_ssl_keys: [${NODE_IP}]
 
 # Advanced networking
 kube_service_addresses: 10.233.0.0/18
@@ -89,7 +75,16 @@ system_reserved: true
 system_reserved_memory: 512Mi
 system_reserved_cpu: 200m
 
+# Single node configuration
+override_system_hostname: false
+kubelet_deployment_type: host
+
+# SSH configuration for remote deployment
+ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+
 # GPU configuration
 nvidia_driver_version: "525"
 nvidia_container_runtime_version: "3.13.0"
 EOF
+
+log "Cluster configuration completed successfully!"
