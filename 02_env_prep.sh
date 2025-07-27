@@ -4,7 +4,7 @@ set -e  # Exit on any error
 
 # Configuration variables
 #KUBESPRAY_VERSION="v2.24.0"  # Change to desired version
-CLUSTER_NAME="k8s-cluster"
+CLUSTER_NAME="k8s-scaling-cluster"
 #PYTHON_VERSION="3.9"
 
 # Function definitions (you'll need to add these)
@@ -40,9 +40,7 @@ fi
 git clone https://github.com/kubernetes-sigs/kubespray.git
 cd kubespray
 
-# Install dependencies
-sudo pip3 install -r requirements.txt
-
-# 5. Copy sample inventory
-log "Setting up inventory..."
-cp -rfp inventory/sample inventory/${CLUSTER_NAME}
+# 4. Install Python requirements
+log "Installing Python dependencies..."
+pip install --upgrade pip
+pip install -r requirements.txt
