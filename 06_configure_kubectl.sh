@@ -4,8 +4,8 @@ set -e  # Exit on any error
 
 # Configuration variables
 CLUSTER_NAME="k8s-scaling-cluster"
-NODE_IP="70.167.32.130"
-SSH_PORT="31375"
+NODE_IP="201.238.124.65"
+SSH_PORT="10340"
 SSH_USER="root"
 SSH_KEY_PATH="~/.ssh/prime_intellect_k8s"
 

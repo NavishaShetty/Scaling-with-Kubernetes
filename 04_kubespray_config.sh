@@ -1,3 +1,23 @@
+#!/bin/bash
+
+set -e  # Exit on any error
+
+# Configuration variables
+CLUSTER_NAME="k8s-scaling-cluster"
+NODE_IP="201.238.124.65"
+SSH_PORT="10340"
+SSH_USER="root"
+SSH_KEY_PATH="~/.ssh/prime_intellect_k8s"
+
+# Function definitions
+log() {
+    echo "[INFO] $1"
+}
+
+warn() {
+    echo "[WARN] $1"
+}
+
 cd kubespray
 
 # Create necessary directories
@@ -18,8 +38,11 @@ EOF
 # Advanced Kubespray Configuration
 log "Applying advanced Kubespray configurations..."
 cat > inventory/${CLUSTER_NAME}/group_vars/k8s_cluster/k8s-cluster.yml << EOF
-# Kubernetes version
-kube_version: v1.28.2
+# Kubernetes version - compatible with Kubespray v2.20.0
+kube_version: v1.26.0
+kube_version_min_required: v1.26.0
+download_run_once: true
+download_localhost: true
 
 # Cluster configuration
 cluster_name: k8s-scaling
@@ -27,16 +50,9 @@ kube_proxy_mode: ipvs
 
 # Network plugin
 kube_network_plugin: calico
-kube_network_plugin_multus: true
-
-# Enable features for production readiness
-kube_feature_gates:
-  - NodeSwap=false
-  - KubeletInUserNamespace=true
 
 # DNS configuration
 dns_mode: coredns
-enable_nodelocaldns: true
 
 # Container runtime
 container_manager: containerd
@@ -45,15 +61,13 @@ container_manager: containerd
 helm_enabled: true
 
 # Storage
-enable_csi_driver: true
 local_volume_provisioner_enabled: true
 
 # Monitoring and logging
 metrics_server_enabled: true
-enable_network_policy: true
 
 # Single node configuration
-kube_control_plane_port: 6443
+kube_api_server_port: 6443
 supplementary_addresses_in_ssl_keys: [${NODE_IP}]
 
 # Advanced networking
@@ -67,24 +81,23 @@ unsafe_show_logs: true
 bootstrap_os: ubuntu
 
 # Configure container engine
-docker_version: '20.10'
-containerd_version: '1.7.2'
+containerd_version: '1.6.6'
 
 # System optimization
 system_reserved: true
 system_reserved_memory: 512Mi
 system_reserved_cpu: 200m
 
-# Single node configuration
-override_system_hostname: false
-kubelet_deployment_type: host
-
 # SSH configuration for remote deployment
 ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
-
-# GPU configuration
-nvidia_driver_version: "525"
-nvidia_container_runtime_version: "3.13.0"
 EOF
 
 log "Cluster configuration completed successfully!"
+
+# Create version.yml
+cat > inventory/${CLUSTER_NAME}/group_vars/k8s_cluster/version.yml << EOF
+---
+kube_version: v1.26.0
+kube_version_min_required: v1.26.0
+container_manager: containerd
+EOF

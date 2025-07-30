@@ -2,14 +2,10 @@
 
 set -e  # Exit on any error
 
-# Set locale
-export LC_ALL=C.UTF-8
-export LANG=C.UTF-8
-
 # Configuration variables
 CLUSTER_NAME="k8s-scaling-cluster"
-NODE_IP="70.167.32.130"
-SSH_PORT="31375"
+NODE_IP="201.238.124.65"
+SSH_PORT="10340"
 SSH_USER="root"
 SSH_KEY_PATH="~/.ssh/prime_intellect_k8s"
 
@@ -26,6 +22,12 @@ error() {
     echo "[ERROR] $1"
     exit 1
 }
+
+# Activate virtual environment if it exists
+if [ -d "../kubespray-venv" ]; then
+    log "Activating virtual environment..."
+    source ../kubespray-venv/bin/activate
+fi
 
 cd kubespray
 

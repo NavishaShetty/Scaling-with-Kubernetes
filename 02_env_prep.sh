@@ -25,22 +25,31 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     fi
     
     # Install dependencies
-    log "Installing Ansible..."
-    brew install ansible
-    
-    log "Installing kubectl..."
-    brew install kubectl
-    
-    log "Installing Python3 and pip..."
-    brew install python3
+    log "Installing Python3 and kubectl..."
+    brew install python3 kubectl
+
+    # Create virtual environment for the project
+    log "Creating Python virtual environment..."
+    python3 -m venv kubespray-venv
+    source kubespray-venv/bin/activate
+
+    # Install compatible Ansible version
+    log "Installing compatible Ansible version..."
+    pip install ansible==2.10.7
+
+    # Install kubernetes package for version comparison
+    pip install "kubernetes>=12.0.0"
     
 else
     log "Installing dependencies for Linux..."
     export DEBIAN_FRONTEND=noninteractive
     apt update -y
-    apt install -y sudo software-properties-common
-    add-apt-repository --yes --update ppa:ansible/ansible
-    apt-get install -y ansible python3-pip
+    apt install -y sudo software-properties-common python3-venv python3-pip
+    python3 -m venv kubespray-venv
+    source kubespray-venv/bin/activate
+    pip install ansible==2.10.7
+    pip install "kubernetes>=12.0.0"
+
 fi
 
 log "Starting Kubespray installation process..."
@@ -56,9 +65,8 @@ log "Cloning Kubespray..."
 git clone https://github.com/kubernetes-sigs/kubespray.git
 cd kubespray
 
-# Install Python requirements
+# Install Python requirements within the virtual environment
 log "Installing Python dependencies..."
-pip3 install --upgrade pip
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 
 log "Environment preparation completed successfully!"
