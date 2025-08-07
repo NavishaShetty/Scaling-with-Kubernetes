@@ -6,8 +6,8 @@
 echo "=== SECTION 4: Deploying Kubernetes ==="
 
 # Variables
-AWS_INSTANCE_IP="3.149.236.26"
-AWS_INSTANCE_PRIVATE_IP="172.31.8.149" 
+AWS_INSTANCE_IP="3.147.64.188"
+AWS_INSTANCE_PRIVATE_IP="172.31.9.45"  
 SSH_KEY_PATH="~/.ssh/aws-key-pair.pem" 
 SSH_USER="ubuntu"  
 
