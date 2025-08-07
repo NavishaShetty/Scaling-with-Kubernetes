@@ -5,8 +5,8 @@
 # Execute each section one by one as indicated
 # =============================================================================
 
-AWS_INSTANCE_IP="3.149.236.26"
-AWS_INSTANCE_PRIVATE_IP="172.31.8.149" 
+AWS_INSTANCE_IP="3.147.64.188"
+AWS_INSTANCE_PRIVATE_IP="172.31.9.45" 
 SSH_KEY_PATH="~/.ssh/aws-key-pair.pem" 
 SSH_USER="ubuntu"  
 
@@ -24,9 +24,6 @@ test_aws_connection() {
         echo "✅ AWS instance is accessible"
     else
         echo "❌ Cannot connect to AWS instance. Check:"
-        echo "   - Security group allows SSH (port 22)"
-        echo "   - SSH key path is correct: $SSH_KEY_PATH"
-        echo "   - Instance is running"
         exit 1
     fi
 }
