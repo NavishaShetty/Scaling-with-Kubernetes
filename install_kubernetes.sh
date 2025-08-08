@@ -5,8 +5,8 @@
 # Execute each section one by one as indicated
 # =============================================================================
 
-AWS_INSTANCE_IP="3.147.64.188"
-AWS_INSTANCE_PRIVATE_IP="172.31.9.45" 
+AWS_INSTANCE_IP="3.148.224.30"
+AWS_INSTANCE_PRIVATE_IP="172.31.5.148" 
 SSH_KEY_PATH="~/.ssh/aws-key-pair.pem" 
 SSH_USER="ubuntu"  
 
@@ -132,8 +132,7 @@ configure_kubespray() {
     echo "Configuring Kubespray for single-node AWS deployment..."
     
     # Get the directory where this script is located
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-    KUBESPRAY_DIR="$SCRIPT_DIR/kubespray"
+    KUBESPRAY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
     
     # Check if kubespray directory exists
     if [ ! -d "$KUBESPRAY_DIR" ]; then
@@ -141,10 +140,6 @@ configure_kubespray() {
         echo "Please run 02_install_kubespray.sh first"
         exit 1
     fi
-    
-    # Navigate to kubespray directory
-    cd "$KUBESPRAY_DIR"
-    echo "Working in: $(pwd)"
     
     # Activate virtual environment if not already active
     if [[ "$VIRTUAL_ENV" != *"kubespray-venv"* ]]; then
@@ -249,18 +244,13 @@ deploy_kubernetes() {
     echo "Starting Kubernetes deployment with Kubespray..."
     
     # Get the directory where this script is located
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-    KUBESPRAY_DIR="$SCRIPT_DIR/kubespray"
+    KUBESPRAY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
     
     # Check if kubespray directory exists
     if [ ! -d "$KUBESPRAY_DIR" ]; then
         echo "❌ Kubespray directory not found at: $KUBESPRAY_DIR"
         exit 1
     fi
-    
-    # Navigate to kubespray directory
-    cd "$KUBESPRAY_DIR"
-    echo "Working in: $(pwd)"
     
     # Activate virtual environment if not already active
     if [[ "$VIRTUAL_ENV" != *"kubespray-venv"* ]]; then
@@ -356,15 +346,44 @@ echo 'Checking for running containers...'
 sudo docker ps 2>/dev/null | head -5 || sudo crictl ps 2>/dev/null | head -5 || echo 'No containers found'
 "
 
-# Configure kubectl to skip TLS verification (industry standard for external access)
+# Copy kubeconfig from remote machine
+echo ""
+echo "=== COPYING KUBECONFIG FROM REMOTE MACHINE ==="
+echo "Copying kubeconfig with proper sudo access..."
+
+# Ensure .kube directory exists
+mkdir -p ~/.kube
+
+# Backup existing config if it exists
+if [ -f ~/.kube/config ]; then
+    echo "Backing up existing kubeconfig..."
+    cp ~/.kube/config ~/.kube/config.backup.$(date +%Y%m%d_%H%M%S)
+fi
+
+# Copy the kubeconfig with proper sudo permissions
+echo "Copying admin.conf from remote machine..."
+ssh -i "$SSH_KEY_PATH" "$SSH_USER@$AWS_INSTANCE_IP" "sudo cat /etc/kubernetes/admin.conf" > ~/.kube/config
+
+if [ $? -eq 0 ] && [ -s ~/.kube/config ]; then
+    echo "✅ Successfully copied kubeconfig"
+else
+    echo "❌ Failed to copy kubeconfig or file is empty"
+    exit 1
+fi
+
+# Update kubeconfig for external access
 echo ""
 echo "=== CONFIGURING KUBECTL FOR EXTERNAL ACCESS ==="
+echo "Updating kubeconfig to use external IP address..."
+
+# Replace internal IP addresses with external IP
+sed -i.backup "s/127.0.0.1:6443/$AWS_INSTANCE_IP:6443/g" ~/.kube/config
+sed -i.backup2 "s/$AWS_INSTANCE_PRIVATE_IP:6443/$AWS_INSTANCE_IP:6443/g" ~/.kube/config
+
+echo "Updated server endpoint to use external IP: $AWS_INSTANCE_IP:6443"
+
+# Configure TLS settings for external access
 echo "Setting insecure-skip-tls-verify for external cluster access..."
-
-# Backup config
-cp ~/.kube/config ~/.kube/config.backup
-
-# Use kubectl config commands to properly configure external access
 kubectl config set-cluster cluster.local --server=https://$AWS_INSTANCE_IP:6443 --insecure-skip-tls-verify=true
 
 echo "✅ Configured kubectl for external cluster access"
@@ -373,13 +392,16 @@ echo "✅ Configured kubectl for external cluster access"
 echo ""
 echo "=== TESTING KUBECTL CONNECTION ==="
 echo "Testing cluster connection..."
-kubectl cluster-info --request-timeout=10s
+kubectl get nodes
 
 if [ $? -eq 0 ]; then
     echo "✅ kubectl successfully connected to cluster!"
     echo ""
-    echo "Cluster nodes:"
+    echo "Cluster details:"
     kubectl get nodes -o wide
+    echo ""
+    echo "Cluster info:"
+    kubectl cluster-info
 else
     echo "❌ kubectl connection failed"
     echo ""
