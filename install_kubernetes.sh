@@ -5,8 +5,8 @@
 # Execute each section one by one as indicated
 # =============================================================================
 
-AWS_INSTANCE_IP="3.148.224.30"
-AWS_INSTANCE_PRIVATE_IP="172.31.5.148" 
+AWS_INSTANCE_IP="52.14.124.200"
+AWS_INSTANCE_PRIVATE_IP="172.31.14.217" 
 SSH_KEY_PATH="~/.ssh/aws-key-pair.pem" 
 SSH_USER="ubuntu"  
 
@@ -274,6 +274,40 @@ deploy_kubernetes() {
     fi
     
     echo "✅ Connection test successful!"
+
+    # Deploy with retry on apt lock failures
+    echo "Deploying Kubernetes cluster (this may take 15-30 minutes)..."
+    echo "This will handle OS preparation and Kubernetes installation in one step..."
+    
+    DEPLOY_SUCCESS=false
+    RETRY_COUNT=0
+    MAX_RETRIES=3
+    
+    while [ $DEPLOY_SUCCESS = false ] && [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        echo "Deployment attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+        
+        ansible-playbook -i inventory/mycluster/inventory.ini \
+            --become --become-user=root \
+            cluster.yml
+        
+        if [ $? -eq 0 ]; then
+            DEPLOY_SUCCESS=true
+            echo "✅ Kubernetes deployment completed successfully!"
+        else
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "❌ Deployment failed, waiting 2 minutes before retry..."
+                echo "Clearing apt locks on remote machine..."
+                ansible -i inventory/mycluster/inventory.ini all -m shell \
+                    -a "sudo killall -9 unattended-upgr 2>/dev/null || true; sudo systemctl stop unattended-upgrades" \
+                    --become
+                sleep 120
+            else
+                echo "❌ Kubernetes deployment failed after $MAX_RETRIES attempts"
+                return 1
+            fi
+        fi
+    done
     
     # Deploy Kubernetes cluster (modern Kubespray approach - no separate bootstrap needed)
     echo "Deploying Kubernetes cluster (this may take 15-30 minutes)..."
