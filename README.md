@@ -13,6 +13,8 @@ complete-gpu-setup.sh (run from MacOS)
     └─> remote-gpu-setup.sh 
         └─> gpu-node-setup.sh
     └─> gpu-deploy.sh 
+        └─> nvidia-device-plugin.yaml
     └─> gpu-test.sh 
 > ./ complete-gpu-setup.sh
 
+## Deploying LLM API on the Kubernetes cluster:

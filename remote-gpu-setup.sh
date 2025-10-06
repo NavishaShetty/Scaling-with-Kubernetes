@@ -8,7 +8,7 @@ set -e
 # Configuration - Update these variables
 SSH_KEY_PATH="~/.ssh/aws-key-pair.pem"
 SSH_USER="ubuntu"
-NODE_IP="18.220.143.109"
+NODE_IP="3.143.219.136"
 
 echo "=== Remote GPU Setup Script ==="
 
