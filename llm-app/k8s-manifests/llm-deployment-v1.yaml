@@ -17,10 +17,11 @@ spec:
         app: llm-api
         version: v1
     spec:
+      runtimeClassName: nvidia  # ← ADD THIS LINE
       containers:
       - name: llm-server
         image: llm-api:v1
-        imagePullPolicy: IfNotPresent 
+        imagePullPolicy: IfNotPresent
         env:
         - name: MODEL_NAME
           value: "microsoft/phi-2"
