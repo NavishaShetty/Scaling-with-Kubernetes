@@ -4,9 +4,9 @@
 1. Get a GPU instance from AWS (g4dn.xlarge - Spot instance)
 2. add custom TCP inbound rule for the Security Group for port 6443 on AWS console
 3. Run install_kubernetes.sh 
-> ./ install_kubernetes.sh
+    > ./ install_kubernetes.sh
 4. After sucessfully instaling kubernetes, run the command to check
->kubectl get nodes
+    > kubectl get nodes
 5. Next, we need to setup GPU support on the Kubernetes cluster. Run the complete-gpu-setup.sh shell script. 
 The files are executed in the following order:
 complete-gpu-setup.sh (run from MacOS)
@@ -15,19 +15,26 @@ complete-gpu-setup.sh (run from MacOS)
     └─> gpu-deploy.sh 
         └─> nvidia-device-plugin.yaml
     └─> gpu-test.sh 
+
 > ./ complete-gpu-setup.sh
 
 ## Deploying LLM API on the Kubernetes cluster:
 
-# To push the docker image to Github registry: 
+### To push the docker image to Github registry: 
+### Only if you need to push new image to registry. Not required if image already present in the registry
 - Login to GitHub Container Registry:
-> echo "YOUR_TOKEN" | docker login ghcr.io -u NavishaShetty --password-stdin
+    > echo "YOUR_TOKEN" | docker login ghcr.io -u NavishaShetty --password-stdin
 - Build the Docker image locally:
-> cd ../docker 
-> docker build --platform linux/amd64 -t ghcr.io/navishashetty/llm-api:v1 .
+    > cd ../docker 
+    > docker build --platform linux/amd64 -t ghcr.io/navishashetty/llm-api:v1 .
 - Push to registry
-> docker push ghcr.io/navishashetty/llm-api:v1
+    > docker push ghcr.io/navishashetty/llm-api:v1
 
 go to github -> packages -> llm-api -> Settings -> change to public
 
-# Deploy 
+# Deploy LLM application deployment and service pod
+- go to k8s-manifest folder and deploy the pod
+    > cd llm-app/k8s-manifests
+    > kubectl apply -f llm-deployment-tinyllama-v1.yaml
+    > kubectl apply -f llm-services.yaml
+

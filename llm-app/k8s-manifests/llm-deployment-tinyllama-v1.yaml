@@ -1,30 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: llm-api-v1
+  name: llm-api-tinyllama
   labels:
     app: llm-api
-    version: v1
+    version: tinyllama
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: llm-api
-      version: v1
+      version: tinyllama
   template:
     metadata:
       labels:
         app: llm-api
-        version: v1
+        version: tinyllama
     spec:
       runtimeClassName: nvidia
       containers:
       - name: llm-server
-        image: ghcr.io/navishashetty/llm-api:v2
-        imagePullPolicy: IfNotPresent
+        image: ghcr.io/navishashetty/llm-api:tinyllama
+        imagePullPolicy: Always
         env:
         - name: MODEL_NAME
-          value: "microsoft/phi-2"
+          value: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
         resources:
           limits:
             nvidia.com/gpu: "1"
@@ -40,13 +40,13 @@ spec:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 90
+          initialDelaySeconds: 60
           periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 120
+          initialDelaySeconds: 90
           periodSeconds: 30
 ---
 apiVersion: v1
