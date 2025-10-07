@@ -5,8 +5,8 @@
 # Execute each section one by one as indicated
 # =============================================================================
 
-AWS_INSTANCE_IP="3.143.219.136"
-AWS_INSTANCE_PRIVATE_IP="172.31.36.125" 
+AWS_INSTANCE_IP="18.217.171.168"
+AWS_INSTANCE_PRIVATE_IP="172.31.37.186" 
 SSH_KEY_PATH="~/.ssh/aws-key-pair.pem" 
 SSH_USER="ubuntu"  
 

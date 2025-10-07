@@ -18,3 +18,16 @@ complete-gpu-setup.sh (run from MacOS)
 > ./ complete-gpu-setup.sh
 
 ## Deploying LLM API on the Kubernetes cluster:
+
+# To push the docker image to Github registry: 
+- Login to GitHub Container Registry:
+> echo "YOUR_TOKEN" | docker login ghcr.io -u NavishaShetty --password-stdin
+- Build the Docker image locally:
+> cd ../docker 
+> docker build --platform linux/amd64 -t ghcr.io/navishashetty/llm-api:v1 .
+- Push to registry
+> docker push ghcr.io/navishashetty/llm-api:v1
+
+go to github -> packages -> llm-api -> Settings -> change to public
+
+# Deploy 

@@ -17,10 +17,10 @@ spec:
         app: llm-api
         version: v1
     spec:
-      runtimeClassName: nvidia  # ← ADD THIS LINE
+      runtimeClassName: nvidia
       containers:
       - name: llm-server
-        image: llm-api:v1
+        image: ghcr.io/navishashetty/llm-api:v1
         imagePullPolicy: IfNotPresent
         env:
         - name: MODEL_NAME
