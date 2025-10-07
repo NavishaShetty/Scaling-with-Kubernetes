@@ -8,13 +8,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Install Python packages SEPARATELY to avoid memory issues
+# Install Python packages
 RUN pip3 install --upgrade pip
-
-# Install PyTorch with CUDA 12.1 support explicitly
 RUN pip3 install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu121
-
-# Install other packages one at a time
 RUN pip3 install --no-cache-dir transformers
 RUN pip3 install --no-cache-dir fastapi
 RUN pip3 install --no-cache-dir "uvicorn[standard]"

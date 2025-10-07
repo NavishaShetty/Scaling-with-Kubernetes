@@ -2,18 +2,21 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
+import uvicorn
 import os
 import time
 
 app = FastAPI()
 
-# Model configuration
-MODEL_NAME = os.getenv("MODEL_NAME", "microsoft/phi-2")
+# microsoft/phi-2 is a large model; using TinyLlama for lighter resource usage
+#MODEL_NAME = os.getenv("MODEL_NAME", "microsoft/phi-2")
+
+MODEL_NAME = os.getenv("MODEL_NAME", "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Load model and tokenizer
 print(f"Loading model {MODEL_NAME} on {DEVICE}...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME, 
     torch_dtype=torch.float16 if DEVICE == "cuda" else torch.float32,
@@ -75,5 +78,4 @@ def generate_text(request: GenerationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

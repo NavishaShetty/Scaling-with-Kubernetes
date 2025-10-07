@@ -1,38 +1,38 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: llm-api-v1
+  name: llm-api-v2
   labels:
     app: llm-api
-    version: v1
+    version: v2
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: llm-api
-      version: v1
+      version: v2
   template:
     metadata:
       labels:
         app: llm-api
-        version: v1
+        version: v2
     spec:
       runtimeClassName: nvidia
       containers:
       - name: llm-server
         image: ghcr.io/navishashetty/llm-api:v2
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: MODEL_NAME
           value: "microsoft/phi-2"
         resources:
           limits:
             nvidia.com/gpu: "1"
-            memory: "4Gi"
+            memory: "8Gi"
             cpu: "2"
           requests:
             nvidia.com/gpu: "1"
-            memory: "2Gi"
+            memory: "4Gi"
             cpu: "1"
         ports:
         - containerPort: 8000
@@ -40,23 +40,11 @@ spec:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 90
+          initialDelaySeconds: 30
           periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 120
+          initialDelaySeconds: 60
           periodSeconds: 30
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: llm-api-service
-spec:
-  selector:
-    app: llm-api
-  ports:
-  - port: 80
-    targetPort: 8000
-  type: NodePort
