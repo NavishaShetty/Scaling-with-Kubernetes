@@ -8,7 +8,9 @@ import time
 
 app = FastAPI()
 
-# Model configuration - TinyLlama is much smaller!
+# microsoft/phi-2 is a large model; using TinyLlama for lighter resource usage
+#MODEL_NAME = os.getenv("MODEL_NAME", "microsoft/phi-2")
+
 MODEL_NAME = os.getenv("MODEL_NAME", "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -18,7 +20,8 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME, 
     torch_dtype=torch.float16 if DEVICE == "cuda" else torch.float32,
-    device_map="auto"
+    device_map="auto",
+    trust_remote_code=True
 )
 
 class GenerationRequest(BaseModel):
