@@ -37,4 +37,44 @@ go to github -> packages -> llm-api -> Settings -> change to public
     > cd llm-app/k8s-manifests
     > kubectl apply -f llm-deployment-tinyllama-v1.yaml
     > kubectl apply -f llm-services.yaml
+- Get the Nodeport of the service
+    > kubectl get svc llm-api-service
+- Note the Nodeport and add the port to AWS security group
+    > Go to EC2 → Security Groups
+    > Select your security group
+    > Edit inbound rules
+    > Add rule:
+        Type: Custom TCP
+        ex. Port: 31258
+        Source: Your IP or 0.0.0.0/0
+- Test the API
+    # Health check
+    > curl http://<NodeIP>:<NodePort>/health
+    This should return: {"status":"healthy"}
 
+    # Root endpoint
+    > curl http://<NodeIP>:<NodePort>/
+    This should return: {"status":"healthy","model":"TinyLlama/TinyLlama-1.1B-Chat-v1.0","device":"cuda","cuda_available":true}
+
+    # Generate text
+    > curl -X POST http://<NodeIP>:<NodePort>/generate \
+        -H "Content-Type: application/json" \
+        -d '{"prompt": "What is machine learning?", "max_length": 50}'
+
+    This should return JSON with:
+        generated_text: The LLM's response
+        model: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+        device: "cuda"
+        generation_time: How long it took
+
+# For the UI
+- Create ConfigMap with the HTML
+    > cd ../scripts
+- Got to line 206 of llm-chat.html file and change the IP Address and Nodeport. Then,
+    > kubectl create configmap llm-ui-html --from-file=index.html=llm-chat.html
+- Deply the UI service
+    > kubectl apply -f llm-chat-nginx.yaml
+- After deploying the UI service, run the command and get the Nodeport:
+    > kubectl get svc llm-ui-service
+- Add this Nodeport to AWS security group
+    

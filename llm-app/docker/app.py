@@ -1,12 +1,22 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
-import uvicorn
 import os
+import uvicorn
 import time
 
 app = FastAPI()
+
+# Add CORS middleware - CRITICAL for browser access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 # microsoft/phi-2 is a large model; using TinyLlama for lighter resource usage
 #MODEL_NAME = os.getenv("MODEL_NAME", "microsoft/phi-2")
@@ -20,8 +30,7 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME, 
     torch_dtype=torch.float16 if DEVICE == "cuda" else torch.float32,
-    device_map="auto",
-    trust_remote_code=True
+    device_map="auto"
 )
 
 class GenerationRequest(BaseModel):
